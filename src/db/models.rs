@@ -3,7 +3,7 @@ use diesel::prelude::*;
 
 use crate::db::schema::posts;
 
-#[derive(Queryable)]
+#[derive(Queryable, Debug)]
 pub struct Post {
     pub id: i32,
     pub title: String,

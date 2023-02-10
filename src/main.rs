@@ -2,7 +2,7 @@ use crate::db::database::establish_connection;
 
 use self::db::models::*;
 use chrono::{DateTime, NaiveDateTime, Utc};
-use diesel::prelude::*;
+use diesel::{prelude::*, sql_query};
 mod db;
 
 pub fn fetch_posts(con: &mut SqliteConnection) {
@@ -27,7 +27,7 @@ pub fn create_post(
     title: &str,
     body: &str,
     creation_date: &NaiveDateTime,
-) {
+) -> Post {
     use crate::db::schema::posts;
 
     let new_post = NewPost {
@@ -39,18 +39,25 @@ pub fn create_post(
     diesel::insert_into(posts::table)
         .values(&new_post)
         .get_result(con)
-        .expect("Error saving new post");
+        .expect("Error saving new post")
 }
 
 fn main() {
     let con = &mut establish_connection();
 
-    create_post(
+    let version = diesel::dsl::sql::<diesel::sql_types::Text>("select sqlite_version()")
+        .get_result::<String>(con)
+        .unwrap();
+    println!("Sqlite version: {}", version);
+
+    let post = create_post(
         con,
         "Some title",
         "Here is body",
         &DateTime::naive_utc(&Utc::now()),
     );
+
+    println!("{:?}", post);
 
     fetch_posts(con);
 }
